@@ -18,7 +18,7 @@ let page = 1;
 elements.form.addEventListener('submit', onSubmit);
 elements.btnLoadMore.addEventListener('click', onLoadMore);
 
-async function onLoadMore(event) {
+async function onLoadMore() {
   const searchQuery = elements.form.elements.searchQuery.value;
   page += 1;
   console.log(searchQuery);
