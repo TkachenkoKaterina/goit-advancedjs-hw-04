@@ -1,5 +1,4 @@
 import Notiflix from 'notiflix';
-import '../node_modules/notiflix/dist/notiflix-3.2.6.min.css';
 import axios from 'axios';
 
 const elements = {
@@ -18,21 +17,20 @@ let page = 1;
 elements.form.addEventListener('submit', onSubmit);
 elements.btnLoadMore.addEventListener('click', onLoadMore);
 
-async function onLoadMore(event) {
-  const searchQuery = elements.form.elements.searchQuery.value;
+async function onLoadMore() {
   page += 1;
+  const searchQuery = elements.form.elements.searchQuery.value;
   console.log(searchQuery);
 
   try {
-    const response = await servicePixabay({ searchQuery });
+    const response = await servicePixabay({ searchQuery }, page);
     console.log(response);
 
-    if (response.data.totalHits === 0) {
-      notifyUser(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-      return;
-    }
+    // if (!response || response.data.totalHits === 0) {
+    //   console.log("We're sorry, but you've reached the end of search results.");
+    //   elements.btnLoadMore.style.display = 'none';
+    //   return;
+    // }
 
     elements.gallery.insertAdjacentHTML(
       'beforeend',
@@ -48,11 +46,15 @@ async function onSubmit(event) {
   elements.gallery.innerHTML = '';
   const data = {};
   const formData = new FormData(event.currentTarget);
-  const searchQuery = formData.get('searchQuery');
-  await servicePixabay({ searchQuery });
+  formData.forEach((val, key) => {
+    data[key] = val;
+  });
+  await servicePixabay(data);
+  elements.btnSearch.disabled = true;
 }
 
-async function servicePixabay({ searchQuery }) {
+async function servicePixabay({ searchQuery }, page = 1) {
+  //   showLoadingSpinner();
   try {
     const params = new URLSearchParams({
       key: API_KEY,
@@ -61,37 +63,32 @@ async function servicePixabay({ searchQuery }) {
       orientation: 'horizontal',
       safesearch: true,
       page,
-      per_page: 40,
+      per_page: 5,
     });
 
     const response = await axios.get(`${BASE_URL}?${params}`);
-    console.log(response);
-    console.log(response.data);
-    console.log(response.data.hits);
+    // console.log(response);
+    // console.log(response.data);
+    // console.log(response.data.hits);
 
     if (response.data.totalHits === 0) {
       console.log(
         'Sorry, there are no images matching your search query. Please try again.'
       );
       return;
-    } else if (response.data.totalHits > 40) {
+    } else if (response.data.totalHits > 0) {
       elements.btnLoadMore.style.display = 'block';
       elements.gallery.insertAdjacentHTML(
         'beforeend',
         renderGallery(response.data.hits)
       );
-    } else if (response.data.totalHits <= 40) {
-      elements.btnLoadMore.style.display = 'none';
-      elements.gallery.insertAdjacentHTML(
-        'beforeend',
-        renderGallery(response.data.hits)
-      );
-      console.log('This is the last page');
     }
   } catch (error) {
     console.error('Error fetching data:', error);
     console.log('Error details:', error.response);
   } finally {
+    // hideLoadingSpinner();
+    elements.btnSearch.disabled = false;
   }
 }
 
