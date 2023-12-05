@@ -56,6 +56,13 @@ async function onLoadMore() {
     }
 
     gallery.refresh();
+
+    const { height: cardHeight } =
+      elements.gallery.firstElementChild.getBoundingClientRect();
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
   } catch (error) {
     console.log(error);
     console.log(error.message);
@@ -75,6 +82,8 @@ async function onSubmit(event) {
     const { data } = await servicePixabay(searchQuery, page);
 
     if (data.totalHits === 0) {
+      elements.btnLoadMore.style.display = 'none';
+
       iziToast.error({
         title: 'Ooooops',
         message:
@@ -120,6 +129,13 @@ async function onSubmit(event) {
     }
 
     gallery.refresh();
+
+    const { height: cardHeight } =
+      elements.gallery.firstElementChild.getBoundingClientRect();
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
   } catch (error) {
     console.log(error);
     console.log(error.message);
