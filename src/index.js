@@ -11,13 +11,36 @@ const elements = {
 };
 
 elements.form.addEventListener('submit', onSubmit);
-// elements.btnLoadMore.addEventListener('click', onLoadMore);
+elements.btnLoadMore.addEventListener('click', onLoadMore);
 
 elements.btnLoadMore.style.display = 'none';
 
 let page = 1;
-let currentPage;
-const per_page = 40;
+const per_page = 20;
+
+async function onLoadMore() {
+  page += 1;
+  const searchQuery = elements.form.elements.searchQuery.value;
+  console.log(searchQuery);
+
+  try {
+    const { data } = await servicePixabay(searchQuery, page);
+    elements.gallery.insertAdjacentHTML('beforeend', createGallery(data.hits));
+    let currentTotalPages = data.totalHits - per_page * (page - 1);
+    // console.log(page);
+    // console.log(currentTotalPages);
+    if (currentTotalPages > per_page) {
+      let totalPages = currentTotalPages / per_page;
+      console.log(`Total pages = ${Math.ceil(totalPages)}`);
+    } else if (currentTotalPages <= per_page) {
+      elements.btnLoadMore.style.display = 'none';
+      console.log('This is the last page of Gallery');
+    }
+  } catch (error) {
+    console.log(error);
+    console.log(error.message);
+  }
+}
 
 async function onSubmit(event) {
   event.preventDefault();
@@ -25,12 +48,12 @@ async function onSubmit(event) {
 
   page = 1;
   const formData = new FormData(event.currentTarget);
-  const searchQuery = formData.get('searchQuery');
+  const searchQuery = formData.get('searchQuery').trim();
   console.log('searchQuery', searchQuery);
 
   try {
     const { data } = await servicePixabay(searchQuery, page);
-    console.log('data', data);
+    // console.log('data', data);
     elements.gallery.insertAdjacentHTML('beforeend', createGallery(data.hits));
 
     if (data.totalHits > per_page) {
@@ -79,28 +102,3 @@ function createGallery(arr) {
     )
     .join('');
 }
-
-// async function onLoadMore() {
-//   const searchQuery = elements.form.elements.searchQuery.value;
-//   page += 1;
-//   console.log(searchQuery);
-
-//   try {
-//     const response = await servicePixabay({ searchQuery });
-//     console.log(response);
-
-//     if (response.data.totalHits === 0) {
-//       notifyUser(
-//         'Sorry, there are no images matching your search query. Please try again.'
-//       );
-//       return;
-//     }
-
-//     elements.gallery.insertAdjacentHTML(
-//       'beforeend',
-//       renderGallery(response.data.hits)
-//     );
-//   } catch (error) {
-//     console.error('Error loading more data:', error);
-//   }
-// }
