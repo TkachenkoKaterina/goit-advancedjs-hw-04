@@ -1,6 +1,8 @@
 import axios from 'axios';
 import iziToast from 'izitoast';
 import '../node_modules/izitoast/dist/css/iziToast.min.css';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import { servicePixabay } from '/api';
 
 const elements = {
@@ -12,24 +14,28 @@ const elements = {
 
 elements.form.addEventListener('submit', onSubmit);
 elements.btnLoadMore.addEventListener('click', onLoadMore);
-
 elements.btnLoadMore.style.display = 'none';
 
 let page = 1;
 const per_page = 40;
 
+const gallery = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
+
+// onLoadMore
 async function onLoadMore() {
   page += 1;
   const searchQuery = elements.form.elements.searchQuery.value;
-  console.log(searchQuery);
 
   try {
     const { data } = await servicePixabay(searchQuery, page);
     elements.gallery.insertAdjacentHTML('beforeend', createGallery(data.hits));
     let currentTotalPages = data.totalHits - per_page * (page - 1);
+
     if (currentTotalPages > per_page) {
       let totalPages = currentTotalPages / per_page;
-      // console.log(`Total pages = ${Math.ceil(totalPages)}`);
       iziToast.info({
         title: 'Go-on🤩',
         message: `${Math.ceil(totalPages)} pages left`,
@@ -48,12 +54,15 @@ async function onLoadMore() {
         closeOnClick: true,
       });
     }
+
+    gallery.refresh();
   } catch (error) {
     console.log(error);
     console.log(error.message);
   }
 }
 
+// onSubmit
 async function onSubmit(event) {
   event.preventDefault();
   elements.gallery.innerHTML = '';
@@ -61,7 +70,6 @@ async function onSubmit(event) {
   page = 1;
   const formData = new FormData(event.currentTarget);
   const searchQuery = formData.get('searchQuery').trim();
-  console.log('searchQuery', searchQuery);
 
   try {
     const { data } = await servicePixabay(searchQuery, page);
@@ -80,8 +88,9 @@ async function onSubmit(event) {
         'beforeend',
         createGallery(data.hits)
       );
-      elements.btnLoadMore.style.display = 'block';
+
       let totalPages = data.totalHits / per_page;
+
       iziToast.info({
         title: 'Go-on🤩',
         message: `Hooray! We found ${data.totalHits} images (${Math.ceil(
@@ -91,13 +100,14 @@ async function onSubmit(event) {
         timeout: 5000,
         closeOnClick: true,
       });
+
+      elements.btnLoadMore.style.display = 'block';
     } else if (data.totalHits < per_page) {
       elements.gallery.insertAdjacentHTML(
         'beforeend',
         createGallery(data.hits)
       );
-      elements.btnLoadMore.style.display = 'none';
-      // console.log('This is the last page of Gallery');
+
       iziToast.warning({
         title: 'Cool 😸',
         message: 'This is the last page of Gallery',
@@ -105,13 +115,18 @@ async function onSubmit(event) {
         timeout: 5000,
         closeOnClick: true,
       });
+
+      elements.btnLoadMore.style.display = 'none';
     }
+
+    gallery.refresh();
   } catch (error) {
     console.log(error);
     console.log(error.message);
   }
 }
 
+// createGallery
 function createGallery(arr) {
   return arr
     .map(
@@ -124,22 +139,24 @@ function createGallery(arr) {
         comments,
         downloads,
       }) => `<div class="photo-card">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" width="150"/>
+        <a href="${largeImageURL}">
+          <img src="${webformatURL}" alt="${tags}" loading="lazy"/>
+        </a>
         <div class="info">
-            <p class="info-item">
+          <p class="info-item">
             <b>Likes: ${likes}</b>
-            </p>
-            <p class="info-item">
+          </p>
+          <p class="info-item">
             <b>Views: ${views}</b>
-            </p>
-            <p class="info-item">
+          </p>
+          <p class="info-item">
             <b>Comments: ${comments}</b>
-            </p>
-            <p class="info-item">
+          </p>
+          <p class="info-item">
             <b>Downloads: ${downloads}</b>
-            </p>
+          </p>
         </div>
-    </div>
+      </div>
     `
     )
     .join('');
