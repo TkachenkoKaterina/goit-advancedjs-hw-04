@@ -1,4 +1,3 @@
-import axios from 'axios';
 import iziToast from 'izitoast';
 import '../node_modules/izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
