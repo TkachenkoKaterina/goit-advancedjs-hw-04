@@ -76,13 +76,26 @@ async function onSubmit(event) {
   page = 1;
   const formData = new FormData(event.currentTarget);
   const searchQuery = formData.get('searchQuery').trim();
+  console.log(searchQuery);
 
   try {
+    if (searchQuery === '') {
+      elements.btnLoadMore.style.display = 'none';
+      iziToast.warning({
+        title: 'Aaaaashhh😯',
+        message:
+          'Sorry, there are no images matching your search query. Please try again.',
+        position: 'topRight',
+        timeout: 5000,
+        closeOnClick: true,
+      });
+      return;
+    }
+
+    elements.btnLoadMore.style.display = 'none';
     const { data } = await servicePixabay(searchQuery, page);
 
     if (data.totalHits === 0) {
-      elements.btnLoadMore.style.display = 'none';
-
       iziToast.error({
         title: 'Ooooops',
         message:
@@ -128,13 +141,6 @@ async function onSubmit(event) {
     }
 
     gallery.refresh();
-
-    const { height: cardHeight } =
-      elements.gallery.firstElementChild.getBoundingClientRect();
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
   } catch (error) {
     console.log(error);
     console.log(error.message);
